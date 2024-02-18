@@ -110,6 +110,7 @@ h1 {
     margin: 0 auto;
     width: 80%;
     transition: 0.5s;
+    margin-top: 20px;
 }
 .items {
     display: grid;
@@ -152,12 +153,87 @@ h1 {
 }
 .right-sidebar-grid > .right-sidebar {
     grid-area: right-sidebar;
-    background: #f5d55f;
+    background: #ffffff;
+    padding: 0;
 }
 .right-sidebar-grid > .footer {
     grid-area: footer;
     background: #72c2f1;
     text-align: center;
+}
+
+.right-sidebar h4 {
+    text-align: center;
+    border-bottom: solid 1px #ccc;
+    padding: 10px;
+    background-color: #eee;
+}
+.main-content span {
+    font-size: 15px;
+}
+
+.main-cart {
+    grid-area: item-list;
+    margin: 0 auto;
+    width: 80%;
+    transition: 0.5s;
+    display: grid;
+    grid-template-columns: 1fr 40rem;
+    grid-template-rows: repeat(1, 1fr);
+    gap: 20px;
+}
+.main-cart-divider {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+.main-cart-empty {
+    float: right;
+    vertical-align: bottom;
+    justify-content: end;
+    display: grid;
+}
+.checkout-wrap {
+    text-align: center;
+    padding: 10px;
+    background-color: #eee;
+}
+.checkout-content {
+    padding: 20px;
+    font-size: 16px;
+    text-transform: capitalize;
+    min-height: 100px;
+}
+.checkout-content span {
+    display: block;
+    margin-bottom: 20px;
+}
+
+span.checkout-subtotal {
+    float: right;
+    font-weight: bold;
+}
+span.checkount-notes {
+    font-size: 14px;
+}
+.sidebar-notes button {
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    color: #900;
+}
+
+.checkout-wrap button {
+    font-size: 14px;
+    text-transform: uppercase;
+    padding: 10px;
+    width: 100%;
+    background: #900;
+    color: #fff;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
 }
 
 /* tablet breakpoint */
@@ -244,7 +320,14 @@ form .button {
 .button:hover {
     background-color: var(--color-dark);
 }
-
+.sidebar-details span {
+    display: block;
+    margin: 10px 0 10px;
+}
+.sidebar-details input,
+.quantity-style input {
+    width: 50px;
+}
 .sidebar {
     margin-top: 10px;
 }
@@ -259,9 +342,9 @@ form .button {
 
 .sidebar li {
     display: grid;
-    grid-template-columns: 4.8rem 1fr auto;
+    grid-template-columns: 7rem 1fr auto;
     align-items: center;
-    column-gap: 1.6rem;
+    column-gap: 5rem;
     padding: 1.2rem;
     border-radius: 7px;
     transition: 0.5s;
@@ -274,27 +357,6 @@ form .button {
 }
 
 .sidebar li img {
-    border-radius: 50%;
     width: 100%;
     grid-row: span 2;
-}
-
-.sidebar li h3 {
-    grid-row: 1;
-    grid-column: 2;
-}
-
-.sidebar li p {
-    grid-row: 2;
-    grid-column: 2;
-}
-
-.sidebar li .button {
-    grid-row: span 2;
-    grid-column: 3;
-}
-
-.sidebar > .button {
-    float: right;
-    margin-right: 1.2rem;
 }

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
-function Header({ count, cartAmount }) {
+function Header({ count, cartAmount, onShowMyCart }) {
     return (
         <header className="header">
             <div className="cart">
-                <button onClick="">
+                <button onClick={onShowMyCart}>
                     <label>
                         <span className="cart-count">{count}</span>🛒
                     </label>
@@ -30,6 +30,11 @@ export default function App() {
     const [cart, setToCart] = useState([]);
     const [cartCount, setCartCount] = useState(0);
     const [itemAmount, setitemAmount] = useState(0);
+    const [showCart, setShowCart] = useState(false);
+
+    let itemQty = 0;
+    let totalAmount = 0;
+    let confirmed;
 
     async function getItems() {
         const res = await fetch("https://fakestoreapi.com/products");
@@ -44,13 +49,11 @@ export default function App() {
         const itemFoundIndex = [...cart].findIndex(
             (c) => c.title === item.title
         );
-        let itemQty = 0;
-        let totalAmount = 0;
 
         if (itemFoundIndex !== -1) {
             setToCart((items) =>
                 items.map((itemMap) =>
-                    itemMap.id == item.id
+                    itemMap.id === item.id
                         ? {
                               ...itemMap,
                               qty: itemMap.qty + item.qty,
@@ -62,6 +65,7 @@ export default function App() {
         } else {
             setToCart((items) => [...items, item]);
         }
+
         itemQty = cart.reduce((accu, curr) => accu + curr.qty, item.qty);
         setCartCount(itemQty);
 
@@ -69,14 +73,102 @@ export default function App() {
             (accu, curr) => accu + curr.amount,
             item.amount
         );
+
         setitemAmount(totalAmount);
     }
+
+    function handleShowMyCart() {
+        setShowCart((show) => !show);
+    }
+
+    function handleIncrementItem(cartItem) {
+        setToCart((items) =>
+            items.map((item) =>
+                item.id === cartItem.id
+                    ? {
+                          ...item,
+                          qty: item.qty + 1,
+                          amount: item.amount + cartItem.price,
+                      }
+                    : item
+            )
+        );
+        setCartCount((count) => count + 1);
+        setitemAmount((amount) => amount + cartItem.price);
+    }
+    function handleDecrementItem(cartItem) {
+        setToCart((items) =>
+            items.map((item) =>
+                item.id === cartItem.id
+                    ? {
+                          ...item,
+                          qty: item.qty > 1 ? item.qty - 1 : item.qty,
+                          amount:
+                              item.qty > 1
+                                  ? item.amount - cartItem.price
+                                  : item.amount,
+                      }
+                    : item
+            )
+        );
+        setCartCount((count) => (cartItem.qty > 1 ? count - 1 : count));
+        setitemAmount((amount) =>
+            cartItem.qty > 1 ? amount - cartItem.price : amount
+        );
+    }
+
+    function handleDelete(item) {
+        if (cartCount > 0) {
+            confirmed = window.confirm(
+                `Remove an Item${cartCount > 1 ? "'s" : ""} to your cart?`
+            );
+
+            if (confirmed) {
+                setToCart((cart) => cart.filter((c) => c.id !== item.id));
+                setCartCount((count) => count - item.qty);
+                setitemAmount((amount) => Math.abs(amount - item.amount));
+            }
+        }
+    }
+
+    function handleEmptyCart() {
+        if (cart.length > 0) {
+            confirmed = window.confirm(
+                `Are you sure you want to empty your cart?`
+            );
+            if (confirmed) {
+                setToCart([]);
+                setCartCount(0);
+                setitemAmount(0);
+            }
+        }
+    }
+
     return (
         <div className="right-sidebar-grid">
-            <Header count={cartCount} cartAmount={itemAmount} />
-            <ItemList items={items} onAddToCart={handleAddCart} />
-            <MyCart cart={cart} />
-            <Summary />
+            <Header
+                count={cartCount}
+                cartAmount={itemAmount}
+                onShowMyCart={handleShowMyCart}
+            />
+            {!showCart && (
+                <ItemList items={items} onAddToCart={handleAddCart} />
+            )}
+            {showCart && (
+                <div className="main-cart">
+                    <MyCart
+                        cart={cart}
+                        onIncrementItem={handleIncrementItem}
+                        onDecrementItem={handleDecrementItem}
+                        count={cartCount}
+                        onHandleDelete={handleDelete}
+                        onHandleEmptyCart={handleEmptyCart}
+                        onShowMyCart={handleShowMyCart}
+                    />
+                    <Summary cartCount={cartCount} itemAmount={itemAmount} />
+                </div>
+            )}
+
             <Footer />
         </div>
     );
@@ -100,6 +192,7 @@ function ItemList({ items, onAddToCart }) {
 }
 function Item({ item, onAddToCart }) {
     const [qty, setQty] = useState(1);
+
     const itemPrice = Number(item.price.toFixed(2));
     let amount = qty * itemPrice;
 
@@ -114,53 +207,78 @@ function Item({ item, onAddToCart }) {
         onAddToCart(newItem);
     }
 
+    function handleIncrement() {
+        setQty(() => qty + 1);
+    }
+    function handleDecrement() {
+        if (qty > 1) setQty(() => qty - 1);
+    }
+
     return (
         <li className="item">
             <div className="item-image">
                 <img src={item.image} alt={item.title} />
             </div>
-            <form onSubmit={handleAddCart}>
-                <div className="item-detail">
-                    <span>{item.title.slice(0, 10)}</span>
-                    <span>€{itemPrice}</span>
-                    <SelectOption setQty={setQty} qty={qty}>
-                        Quantity:{" "}
-                    </SelectOption>
-                    <div className="item-detail-amount">
-                        Amount:{" "}
-                        <strong>
-                            €{amount > 0 ? amount.toFixed(2) : itemPrice}
-                        </strong>
-                    </div>
-                    <Button>Add to Cart</Button>
+
+            <div className="item-detail">
+                <span>{item.title.slice(0, 10)}</span>
+                <span>€{itemPrice}</span>
+                <div className="quantity-style">
+                    <label>Qty: </label>{" "}
+                    <Button onClickHandle={handleDecrement}>-</Button>
+                    &nbsp;
+                    <input
+                        type="text"
+                        value={qty}
+                        onChange={(e) => setQty(Number(e.target.value))}
+                    />
+                    &nbsp;
+                    <Button onClickHandle={handleIncrement}>+</Button>
                 </div>
-            </form>
+                <div className="item-detail-amount">
+                    Amount:{" "}
+                    <strong>
+                        €{amount > 0 ? amount.toFixed(2) : itemPrice}
+                    </strong>
+                </div>
+                <Button onClickHandle={handleAddCart}>Add to Cart</Button>
+            </div>
         </li>
     );
 }
 
-function SelectOption({ setQty, qty, children }) {
-    return (
-        <div className="quantity-style">
-            <label>{children}</label>
-            <select
-                value={qty}
-                onChange={(e) => setQty(Number(e.target.value))}
-            >
-                {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
-                    <option value={num} key={num}>
-                        {num}
-                    </option>
-                ))}
-            </select>
-        </div>
-    );
-}
-function MyCart({ cart }) {
+function MyCart({
+    cart,
+    onIncrementItem,
+    onDecrementItem,
+    count,
+    onHandleDelete,
+    onHandleEmptyCart,
+    onShowMyCart,
+}) {
     console.log(cart);
+    const [quantity, setQuantity] = useState(1);
+
     return (
         <main className="main-content">
-            <h3>My Cart</h3>
+            <div className="main-cart-divider">
+                <div>
+                    <h3>
+                        My Cart{" "}
+                        <span>
+                            {cart.length} Product{cart.length > 1 ? "'s" : ""},{" "}
+                            {count} Item{count > 1 ? "'s" : ""}
+                        </span>
+                    </h3>
+                </div>
+                {cart.length > 0 && (
+                    <div className="main-cart-empty">
+                        <Button onClickHandle={onHandleEmptyCart}>
+                            Empty Cart 🗑️
+                        </Button>
+                    </div>
+                )}
+            </div>
             <div className="sidebar">
                 <ul>
                     {cart.length > 0 ? (
@@ -169,26 +287,88 @@ function MyCart({ cart }) {
                                 <img src={c.image} alt={c.title} />
                                 <div className="sidebar-details">
                                     <h3>{c.title.slice(0, 10)}</h3>
-                                    <p>Qty : {c.qty}</p>
-                                    <p>Amount : {c.amount}</p>
+                                    <span>
+                                        Qty :{" "}
+                                        <Button
+                                            onClickHandle={() =>
+                                                onDecrementItem(c)
+                                            }
+                                        >
+                                            -
+                                        </Button>
+                                        &nbsp;
+                                        <input
+                                            type="text"
+                                            value={c.qty}
+                                            onChange={(e) =>
+                                                setQuantity(
+                                                    Number(e.target.value)
+                                                )
+                                            }
+                                        />
+                                        &nbsp;
+                                        <Button
+                                            onClickHandle={() =>
+                                                onIncrementItem(c)
+                                            }
+                                        >
+                                            +
+                                        </Button>
+                                    </span>
+                                    <span>Amount : €{c.amount.toFixed(2)}</span>
+
+                                    <Button
+                                        onClickHandle={() => onHandleDelete(c)}
+                                    >
+                                        Delete ❌
+                                    </Button>
                                 </div>
                             </li>
                         ))
                     ) : (
-                        <div>Your cart is empty</div>
+                        <div className="sidebar-notes">
+                            Your cart is empty{" "}
+                            <button onClick={onShowMyCart}>
+                                Continue Shopping
+                            </button>
+                        </div>
                     )}
                 </ul>
             </div>
         </main>
     );
 }
-function Summary() {
-    return <section className="right-sidebar">right sidebar</section>;
+function Summary({ cartCount, itemAmount }) {
+    function handleCheckout() {
+        window.confirm("Go to Payment Page - Standby for next feature...");
+    }
+    return (
+        <section className="right-sidebar">
+            <h4>ORDER SUMMARY</h4>
+            <div className="checkout-content">
+                <span className="subtotal">
+                    SUBTOTAL ({cartCount} ITEMS):{" "}
+                    <span className="checkout-subtotal">
+                        &nbsp;€ {itemAmount}
+                    </span>
+                </span>
+                <span className="checkount-notes">
+                    Total Does Not Include Shipping Or Tax
+                </span>
+            </div>
+            <div className="checkout-wrap">
+                <button onClick={handleCheckout}>Proceed to Checkout</button>
+            </div>
+        </section>
+    );
 }
 function Footer() {
     return (
         <div className="footer">
-            <footer className="footer">Footer</footer>
+            <footer className="footer">
+                Developed by:{" "}
+                <a href="https://github.com/keanduque">KeanDuque</a>
+            </footer>
         </div>
     );
 }
