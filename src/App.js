@@ -31,17 +31,18 @@ export default function App() {
     const [cartCount, setCartCount] = useState(0);
     const [itemAmount, setitemAmount] = useState(0);
     const [showCart, setShowCart] = useState(false);
+    const [showPopup, setShowPopup] = useState(false);
 
     let itemQty = 0;
     let totalAmount = 0;
     let confirmed;
 
-    async function getItems() {
-        const res = await fetch("https://fakestoreapi.com/products");
-        const data = await res.json();
-        setItems(data);
-    }
-    useEffect(() => {
+    useEffect(function () {
+        async function getItems() {
+            const res = await fetch("https://fakestoreapi.com/products");
+            const data = await res.json();
+            setItems(data);
+        }
         getItems();
     }, []);
 
@@ -79,6 +80,9 @@ export default function App() {
 
     function handleShowMyCart() {
         setShowCart((show) => !show);
+    }
+    function handleShowPopup() {
+        setShowPopup((show) => !show);
     }
 
     function handleIncrementItem(cartItem) {
@@ -150,9 +154,15 @@ export default function App() {
                 count={cartCount}
                 cartAmount={itemAmount}
                 onShowMyCart={handleShowMyCart}
+                showPopup={showPopup}
             />
             {!showCart && (
-                <ItemList items={items} onAddToCart={handleAddCart} />
+                <ItemList
+                    items={items}
+                    onAddToCart={handleAddCart}
+                    onShowPopup={handleShowPopup}
+                    showPopup={showPopup}
+                />
             )}
             {showCart && (
                 <div className="main-cart">
@@ -174,7 +184,7 @@ export default function App() {
     );
 }
 
-function ItemList({ items, onAddToCart }) {
+function ItemList({ items, onAddToCart, onShowPopup, showPopup }) {
     return (
         <div className="item-list">
             <ul className="items">
@@ -184,13 +194,15 @@ function ItemList({ items, onAddToCart }) {
                             key={item.id}
                             item={item}
                             onAddToCart={onAddToCart}
+                            onShowPopup={onShowPopup}
+                            showPopup={showPopup}
                         />
                     ))}
             </ul>
         </div>
     );
 }
-function Item({ item, onAddToCart }) {
+function Item({ item, onAddToCart, onShowPopup, showPopup }) {
     const [qty, setQty] = useState(1);
 
     const itemPrice = Number(item.price.toFixed(2));
@@ -204,6 +216,10 @@ function Item({ item, onAddToCart }) {
             qty,
             amount,
         };
+        onShowPopup();
+
+        console.log(showPopup);
+
         onAddToCart(newItem);
     }
 
@@ -243,10 +259,27 @@ function Item({ item, onAddToCart }) {
                 </div>
                 <Button onClickHandle={handleAddCart}>Add to Cart</Button>
             </div>
+            {/* {showPopup && (
+                <ItemPopUp onShowPopup={onShowPopup} showPopup={showPopup} />
+            )} */}
         </li>
     );
 }
 
+function ItemPopUp({ onShowPopup, showPopup }) {
+    return (
+        <>
+            <div id="myModal" className={`modal ${showPopup ? "in" : ""}`}>
+                <div className="modal-content">
+                    <button className="close" onClick={() => onShowPopup()}>
+                        &times;
+                    </button>
+                    <p>Some text in the Modal..</p>
+                </div>
+            </div>
+        </>
+    );
+}
 function MyCart({
     cart,
     onIncrementItem,
