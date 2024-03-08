@@ -46,7 +46,9 @@ export default function App() {
         getItems();
     }, []);
 
+    // add to cart event handler
     function handleAddCart(item) {
+        // check if the added item based on title exist
         const itemFoundIndex = [...cart].findIndex(
             (c) => c.title === item.title
         );
