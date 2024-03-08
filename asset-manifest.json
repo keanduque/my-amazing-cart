@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/my-amazing-cart/static/css/main.fd8ed30c.css",
+    "main.js": "/my-amazing-cart/static/js/main.47b396a0.js",
+    "index.html": "/my-amazing-cart/index.html",
+    "main.fd8ed30c.css.map": "/my-amazing-cart/static/css/main.fd8ed30c.css.map",
+    "main.47b396a0.js.map": "/my-amazing-cart/static/js/main.47b396a0.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.fd8ed30c.css",
+    "static/js/main.47b396a0.js"
+  ]
+}
